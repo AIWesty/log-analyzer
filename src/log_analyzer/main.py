@@ -29,7 +29,8 @@ def main():
         else:
             print("\n=== Log Analysis Summary ===")
             print(f"Total requests: {summary['total_requests']}")
-            print(f"Top IP: {summary['top_ip']}")
+            top_ip = summary['top_ips'][0] 
+            print(f"Top IP: {top_ip['ip']} ({top_ip['count']} requests)")
             print(f"Errors (4xx/5xx): {summary['errors']}")
             print(f"Status distribution: {summary['status_distribution']}")
             
@@ -39,3 +40,7 @@ def main():
     except Exception as e: #все остальные исключения 
         print(f"❌ Error: {e}", file=sys.stderr)
         sys.exit(1)
+    
+
+if __name__ == "__main__": #когда используем как модуль функция выполняется
+    main() 
