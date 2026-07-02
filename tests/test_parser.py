@@ -1,5 +1,5 @@
 import pytest
-from src.log_analyzer.parser import NginxLogParser
+from log_analyzer.parser import NginxLogParser
 
 
 class TestNginxLogParser:
@@ -30,7 +30,8 @@ class TestNginxLogParser:
         result = self.parser.parse_line(line)
         
         assert result is None
-        
+    
+    # здесь передаем кортежи в виде statuscode, expected    
     @pytest.mark.parametrize("status_code,expected", [
         ("200", 200),
         ("404", 404),
