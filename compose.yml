@@ -1,0 +1,43 @@
+services:
+  nginx: 
+    image: nginx:1.30.3-alpine
+    container_name: log-genarator
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro # конфиг с хоста(из папки nginx) будет доступен в контейнере в readonly
+      - nginx-logs:/var/log/nginx #указываем конечный путь в контейнере к логам
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"] #запрос на endpoint с разрешенным failure, узнаем о состоянии контейнера
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks: # подключаем сеть
+      - log-network
+
+  log-analyzer: #контейнер с приложением
+    build: 
+      context: . #текущий каталог
+      dockerfile: Dockerfile
+    image: log-analyzer:latest #пока берем latest, текущий образ с хоста
+    container_name: log-analyzer
+    environment: #дефолтные переменные
+      - LOG_FILE_PATH=/var/log/nginx/access.log
+      - OUTPUT_FORMAT=json
+      - TOP_N_IPS=5
+    volumes: #доступ к логам на хосте 
+      - nginx-log:/var/log/nginx:ro
+    depends_on: # зависим от запуска сервиса nginx
+      nginx:
+        condition: service_healthy #используем healthcheck как источник состояния
+    networks:
+      - log-network
+
+
+volumes: # указываем создание тома, лежит /var/lib/docker/volumes/log-analyzer_nginx-logs/_data
+  nginx-logs: # регистрируем именованный том 
+    driver: local
+
+networks: #обьявление сети
+  log-network:
+    driver: bridge #базовый драйвер - сетевой мост
