@@ -26,7 +26,7 @@ services:
       - OUTPUT_FORMAT=json
       - TOP_N_IPS=5
     volumes: #доступ к логам на хосте 
-      - nginx-log:/var/log/nginx:ro
+      - nginx-logs:/var/log/nginx:ro
     depends_on: # зависим от запуска сервиса nginx
       nginx:
         condition: service_healthy #используем healthcheck как источник состояния
