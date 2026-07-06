@@ -22,7 +22,7 @@ services:
     image: log-analyzer:latest #пока берем latest, текущий образ с хоста
     container_name: log-analyzer
     environment: #дефолтные переменные
-      - LOG_FILE_PATH=/var/log/nginx/access.log
+      - LOG_FILE_PATH=/var/log/nginx/app_access.log
       - OUTPUT_FORMAT=json
       - TOP_N_IPS=5
     volumes: #доступ к логам на хосте 

@@ -5,7 +5,7 @@ class Config:
     """Конфигурация приложения через переменные окружения."""
     
     # путь к файлу логов
-    LOG_FILE_PATH = os.getenv('LOG_FILE_PATH', '/var/log/nginx/access.log')
+    LOG_FILE_PATH = os.getenv('LOG_FILE_PATH', '/var/log/nginx/app_access.log')
     
     # размер лога для обработки (в строках, для ограничения памяти)
     MAX_LINES = int(os.getenv('MAX_LINES', '100000'))
