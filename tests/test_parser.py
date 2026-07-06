@@ -47,7 +47,7 @@ class TestNginxLogParser:
         
     def test_parse_file (self, sample_log_path):
         
-        logs = self.parser.parse_file(str(sample_log_path)) # превращаем обьект Path в строку пути
+        logs = self.parser.parse_file_generator(str(sample_log_path)) # превращаем обьект Path в строку пути
         
         assert len(logs) == 7
         
@@ -66,7 +66,7 @@ class TestNginxLogParser:
         log_file = tmp_path / "empty.log"
         log_file.write_text("\n\n\n")
         
-        logs = self.parser.parse_file(log_file)
-        assert len(logs) == 0
+        logs = self.parser.parse_file_generator(log_file)
+        assert logs is None 
         
         

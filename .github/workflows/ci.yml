@@ -1,0 +1,46 @@
+name: CI Pipline
+
+on:
+  push:
+    branches: 
+    - main #сработает при пуше в main и develop ветки
+    - develop
+    - 'develop/**'  # все ветки, начинающиеся с develop/
+  pull_request: 
+    branches: 
+    - main #при пулл реквесте в мейн  
+
+env:
+  PYTHON_VERSION: "3.14"
+  DOCKER_IMAGE: ghcr.io/${{ github.repository }}/log-analyzer #ссылка на гихаб регистри проекта
+
+jobs:
+  lint: # job
+    name: Lint code
+    runs-on: self-hosted #указываем что запускаем локально  
+
+    steps:
+      - name: Checkout code 
+        uses: actions/checkout@7 #готовый переиспользуемый модуль, клонирует репозиторий в job 
+      
+      - name: Сетап python
+        uses: actions/setup-python@v6 # модуль установки python 
+        with:
+          python-version: ${{ env.PYTHON_VERSION }} # передаем переменные для настройки
+          cache: 'poetry' #кешировать poetry зависимости. Все доступные значения в actions.yml в репо
+          
+      - name: Установка poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: false # не создаем виртуальное окружение, тк джоба это отдельный изолированный контейнер
+          installer-parallel: true
+        
+      - name: Установка зависимостей
+        run:  
+          poetry install --no-interaction --no-ansi 
+      
+      - name: Run Ruff linter
+        run: ruff check src/ tests/
+      
+      - name: Check code formatting with Black
+        run: black --check src/ tests/
