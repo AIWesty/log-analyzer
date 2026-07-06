@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout code 
-        uses: actions/checkout@7 #готовый переиспользуемый модуль, клонирует репозиторий в job 
+        uses: actions/checkout@v7 #готовый переиспользуемый модуль, клонирует репозиторий в job 
       
       - name: Сетап python
         uses: actions/setup-python@v6 # модуль установки python 
