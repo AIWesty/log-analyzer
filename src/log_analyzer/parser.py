@@ -1,7 +1,8 @@
 import re
 
-from typing import Optional
+from typing import Optional, Iterator
 from datetime import datetime
+from tqdm import tqdm
 
 
 
@@ -28,27 +29,37 @@ class NginxLogParser:
             Returns: словарь с данными лога или None 
         """
         #применяем шаблон к пришедшей строке
-        match = self.LOG_PATTERN.match(line.strip()) #очищаем строку и ищем совпадение по шаблону
+        match = self.LOG_PATTERN.match(line.rstrip('\n\r')) #strip() ищет пробелы с обеих сторон, rstrip('\n\r') убирает только переносы строк
         if not match: #если строка не попала под шаблон вернем none 
             return None 
         
         #собирает словарь с данными по ключам из совпавшей строки, которые указывали в <>
-        data = match.groupdict()
-        data['status'] = int(data['status']) 
-        data['bytes'] = int(data['bytes'])
+        return { 
+            'ip': match.group('ip'),
+            'timestamp': match.group('timestamp'),
+            'method': match.group('method'),
+            'url': match.group('url'),
+            'protocol': match.group('protocol'),
+            'status': int(match.group('status')), 
+            'bytes': int(match.group('bytes')),
+            'referer': match.group('referer'),
+            'user_agent': match.group('user_agent')
         
-        return data
-    
-    def parse_file(self, filepath: str) -> list[dict]: 
-        """Парсим полный файл
+        }
+        
+        
+        
+    def parse_file_generator(self, filepath: str) -> Iterator[dict]: 
+        """Парсим полный файл, делаем при помощи генератора, чтобы экономить память
             Args: filepath - str
             Returns: список словарей с данными
         """
-        
-        logs = [] #итоговый список
-        with open(filepath, 'r', encoding='utf8') as logfile: 
-            for line in logfile:
-                data = self.parse_line(line) #применяем ко всем строкам функцию парса строки
-                if data: 
-                    logs.append(data)
-        return logs
+        with open(filepath, 'r', encoding='utf8') as logfile:
+            with tqdm(desc="Parsing logs", unit=" lines") as pbar:
+                for line in logfile: # идем построчно по файлу
+                    data = self.parse_line(line) #парсим каждую строчку
+                    pbar.update(1) # обновляем счетчик строк 
+                    if data: 
+                        yield data #отдаем результат если строчка сметчилась, не сохраняем в память
+
+    

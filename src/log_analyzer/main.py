@@ -1,7 +1,7 @@
 import json
 import sys
 from pathlib import Path
-
+from itertools import islice
 from .parser import NginxLogParser
 from .stats import LogStatistics
 from .config import Config
@@ -14,11 +14,11 @@ def main():
         print(f"📊 Analyzing log file: {Config.LOG_FILE_PATH}")
         
         parser = NginxLogParser() #парсим данные файла логов
-        logs = parser.parse_file(Config.LOG_FILE_PATH)
+        logs_generator = parser.parse_file_generator(Config.LOG_FILE_PATH)
         
-        logs = logs[:Config.MAX_LINES]#записываем значение в max_lines конфига
+        logs = list(islice(logs_generator, Config.MAX_LINES))#берем из распаршенного файла только первые max_lines строк
         
-        print(f"✅ Parsed {len(logs)} log entries")
+        print(f"✅ Parsed {len(logs)} log entries") #выдаем длину итогового списка строк
         
         #считаем общую статистику
         stats = LogStatistics(logs)

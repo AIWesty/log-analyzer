@@ -1,9 +1,9 @@
 services:
   nginx: 
     image: nginx:1.30.3-alpine
-    container_name: log-genarator
+    container_name: log-generator
     ports:
-      - "8080:80"
+      - "8080:80" 
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro # конфиг с хоста(из папки nginx) будет доступен в контейнере в readonly
       - nginx-logs:/var/log/nginx #указываем конечный путь в контейнере к логам
