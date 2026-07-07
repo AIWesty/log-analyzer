@@ -25,3 +25,15 @@ logs:
 
 shell:
 	docker-compose exec nginx sh
+
+black:
+	poetry run black --check .
+
+blackfix:
+	poetry run black .
+
+ruff: 
+	poetry run ruff check src/ tests/
+
+ruffix:
+	poetry run ruff check src/ tests/ --fix

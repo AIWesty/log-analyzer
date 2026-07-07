@@ -4,22 +4,22 @@ from pathlib import Path
 
 class Config:
     """Конфигурация приложения через переменные окружения."""
-    
+
     # путь к файлу логов
-    LOG_FILE_PATH = os.getenv('LOG_FILE_PATH', '/var/log/nginx/app_access.log')
-    
+    LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "/var/log/nginx/app_access.log")
+
     # размер лога для обработки (в строках, для ограничения памяти)
-    MAX_LINES = int(os.getenv('MAX_LINES', '100000'))
-    
+    MAX_LINES = int(os.getenv("MAX_LINES", "100000"))
+
     # топ N IP для статистики
-    TOP_N_IPS = int(os.getenv('TOP_N_IPS', '10'))
-    
+    TOP_N_IPS = int(os.getenv("TOP_N_IPS", "10"))
+
     # формат вывода (json или text)
-    OUTPUT_FORMAT = os.getenv('OUTPUT_FORMAT', 'json')
-    
+    OUTPUT_FORMAT = os.getenv("OUTPUT_FORMAT", "json")
+
     # healthcheck endpoint (для Docker)
-    HEALTHCHECK_ENABLED = os.getenv('HEALTHCHECK_ENABLED', 'true').lower() == 'true'
-    
+    HEALTHCHECK_ENABLED = os.getenv("HEALTHCHECK_ENABLED", "true").lower() == "true"
+
     @classmethod
     def validate(cls):
         """проверяет конфигурацию на корректность"""
