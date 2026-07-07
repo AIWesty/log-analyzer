@@ -426,9 +426,9 @@ slack = ["envwrap", "slack-sdk"]
 telegram = ["envwrap", "requests"]
 
 [extras]
-dev = ["black", "pytest", "pytest-cov", "ruff"]
+dev = ["black", "pytest", "pytest-cov", "ruff", "tqdm"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14"
-content-hash = "ecc0d32b186fd544aca569a1fe46ac8b6f4aa9b1a3a8a839c464d03136c97a16"
+content-hash = "3ae3508b98c3ec5d3c11664dcd75565e99a00827ade26c9451e7586ce1cc1d4a"

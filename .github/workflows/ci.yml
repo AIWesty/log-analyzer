@@ -39,7 +39,7 @@ jobs:
 
       - name: Загрузка кеша venv
         id: cached-poetry-dependencies # присваиваем "название" чтобы обратиться позже 
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .venv #файл который мы кешируем - все окружение с зависимостями
           # Уникальный ключ кэша зависит от ОС, версии Python и файла poetry.lock
