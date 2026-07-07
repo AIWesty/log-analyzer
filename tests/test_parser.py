@@ -47,13 +47,15 @@ class TestNginxLogParser:
         
     def test_parse_file (self, sample_log_path):
         
-        logs = self.parser.parse_file_generator(str(sample_log_path)) # превращаем обьект Path в строку пути
+        logs = list(self.parser.parse_file_generator(str(sample_log_path))) # превращаем обьект Path в строку пути, затем оборачиваем генератор в список
         
-        assert len(logs) == 7
+        assert len(logs) == 7 #колво элементов
         
-        assert logs[0]['ip'] == '192.168.1.1'
-        assert logs[0]['status'] == 200
-        assert 'INVALID' not in logs
+        assert logs[0]['ip'] == '192.168.1.1' #первый словарь, первый ключ 
+        assert logs[0]['status'] == 200 # первый словарь ключ status
+        
+        statuses = [log.get('status') for log in logs]
+        assert 'INVALID' not in statuses
         
         ips = [log['ip'] for log in logs]
         assert '192.168.1.1' in ips
