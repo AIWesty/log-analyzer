@@ -1,5 +1,3 @@
-
-import pytest
 from log_analyzer.stats import LogStatistics
 
 

@@ -1,5 +1,6 @@
 from collections import Counter
 
+
 class LogStatistics: 
     """Класс для вычисления статистики из логов."""
     
@@ -15,11 +16,16 @@ class LogStatistics:
                 "2.2.2.2": 1
             ]
         """
-        ip_counter = Counter(log['ip'] for log in self.logs)#пробегаемся по логам(по словарям) и получаем ip:count(словарь)
+        
+        #пробегаемся по логам(по словарям) и получаем ip:count(словарь)
+        ip_counter = Counter(log['ip'] for log in self.logs)
+        
         return [
             {"ip": ip, "count": count}
-            for ip, count in ip_counter.most_common(n) #бежим по словарю часто встречающихся(most_common по убыванию выбирает) 
+            #бежим по словарю часто встречающихся(most_common по убыванию выбирает) 
+            for ip, count in ip_counter.most_common(n) 
         ]
+        
     def get_errors_count(self) -> int: 
         """Возвращаем количество ошибок (4xx, 5xx)"""
         
@@ -32,7 +38,8 @@ class LogStatistics:
         Returns:
             Словарь {status: count}
         """
-        status_counter = Counter(log['status'] for log in self.logs) #получаем {status_code: count}
+        #получаем {status_code: count}
+        status_counter = Counter(log['status'] for log in self.logs)
         return dict(status_counter)
     
     def get_summary(self) -> dict:

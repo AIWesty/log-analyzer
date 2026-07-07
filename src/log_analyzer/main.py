@@ -1,10 +1,10 @@
 import json
 import sys
-from pathlib import Path
 from itertools import islice
+
+from .config import Config
 from .parser import NginxLogParser
 from .stats import LogStatistics
-from .config import Config
 
 
 def main():
@@ -16,9 +16,11 @@ def main():
         parser = NginxLogParser() #парсим данные файла логов
         logs_generator = parser.parse_file_generator(Config.LOG_FILE_PATH)
         
-        logs = list(islice(logs_generator, Config.MAX_LINES))#берем из распаршенного файла только первые max_lines строк
+        #берем из распаршенного файла только первые max_lines строк
+        logs = list(islice(logs_generator, Config.MAX_LINES))
         
-        print(f"✅ Parsed {len(logs)} log entries") #выдаем длину итогового списка строк
+        #выдаем длину итогового списка строк
+        print(f"✅ Parsed {len(logs)} log entries") 
         
         #считаем общую статистику
         stats = LogStatistics(logs)

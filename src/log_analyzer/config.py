@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+
 class Config:
     """Конфигурация приложения через переменные окружения."""
     

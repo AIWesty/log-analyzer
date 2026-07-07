@@ -1,22 +1,22 @@
 import re
+from typing import Iterator, Optional
 
-from typing import Optional, Iterator
-from datetime import datetime
 from tqdm import tqdm
-
 
 
 class NginxLogParser: 
     """Парсер логов nginx в access формате"""
     
     
-    # Пример строки: 192.168.1.1 - - [01/Jul/2026:12:00:00 +0000] "GET /api/health HTTP/1.1" 200 123 "-" "curl/7.68.0"
+    # Пример строки: 192.168.1.1 - - [01/Jul/2026:12:00:00 +0000] \
+    # "GET /api/health HTTP/1.1" 200 123 "-" "curl/7.68.0"
     # регулярный шаблон компилируем один раз 
     LOG_PATTERN = re.compile(
         r'(?P<ip>\d+\.\d+\.\d+\.\d+)' #ip адрес
         r'\s+-\s+-\s+' # identity, user (обычно -)
         r'\[(?P<timestamp>.+)\]\s+' #timestamp, ищет \[]\ скобки и символы внутри
-        r'"(?P<method>\w+)\s+(?P<url>[^\s]+)\s+(?P<protocol>[^"]+)"\s+' # метод + пробел + все символы кроме пробела, все кроме "", и пробел
+        # метод + пробел + все символы кроме пробела, все кроме "", и пробел    
+        r'"(?P<method>\w+)\s+(?P<url>[^\s]+)\s+(?P<protocol>[^"]+)"\s+' 
         r'(?P<status>\d{3})\s'# 3цифры и пробел
         r'(?P<bytes>\d+)\s+' #цифры 
         r'"(?P<referer>[^"]*)"\s+' # referer
@@ -29,11 +29,14 @@ class NginxLogParser:
             Returns: словарь с данными лога или None 
         """
         #применяем шаблон к пришедшей строке
-        match = self.LOG_PATTERN.match(line.rstrip('\n\r')) #strip() ищет пробелы с обеих сторон, rstrip('\n\r') убирает только переносы строк
+        #strip() ищет пробелы с обеих сторон, rstrip('\n\r')\
+        # убирает только переносы строк
+        match = self.LOG_PATTERN.match(line.rstrip('\n\r'))
         if not match: #если строка не попала под шаблон вернем none 
             return None 
         
-        #собирает словарь с данными по ключам из совпавшей строки, которые указывали в <>
+        #собирает словарь с данными по ключам \
+        # из совпавшей строки, которые указывали в <>
         return { 
             'ip': match.group('ip'),
             'timestamp': match.group('timestamp'),
@@ -60,6 +63,6 @@ class NginxLogParser:
                     data = self.parse_line(line) #парсим каждую строчку
                     pbar.update(1) # обновляем счетчик строк 
                     if data: 
-                        yield data #отдаем результат если строчка сметчилась, не сохраняем в память
-
+                        #отдаем результат если строчка сметчилась, не сохраняем в память
+                        yield data 
     

@@ -1,4 +1,5 @@
 import pytest
+
 from log_analyzer.parser import NginxLogParser
 
 
@@ -13,7 +14,7 @@ class TestNginxLogParser:
     def test_parse_line_valid(self):
         """тест парсинга валидной строки"""
         
-        line = '192.168.1.1 - - [01/Jul/2026:10:00:00 +0000] "GET /api/health HTTP/1.1" 200 123 "-" "curl/7.68.0"'
+        line = '192.168.1.1 - - [01/Jul/2026:10:00:00 +0000] "GET /api/health HTTP/1.1" 200 123 "-" "curl/7.68.0"' # noqa: E501
         result = self.parser.parse_line(line)
         
         assert result is not None
@@ -39,7 +40,7 @@ class TestNginxLogParser:
         ("201", 201) ])
     def test_parse_different_statuses(self, status_code, expected):
         
-        line = f'192.168.1.1 - - [01/Jul/2026:10:00:00 +0000] "GET / HTTP/1.1" {status_code} 123 "-" "curl/7.68.0"'
+        line = f'192.168.1.1 - - [01/Jul/2026:10:00:00 +0000] "GET / HTTP/1.1" {status_code} 123 "-" "curl/7.68.0"'# noqa: E501
         result = self.parser.parse_line(line)
         
         assert result is not None
@@ -47,7 +48,8 @@ class TestNginxLogParser:
         
     def test_parse_file (self, sample_log_path):
         
-        logs = list(self.parser.parse_file_generator(str(sample_log_path))) # превращаем обьект Path в строку пути, затем оборачиваем генератор в список
+        # превращаем обьект Path в строку пути, затем оборачиваем генератор в список
+        logs = list(self.parser.parse_file_generator(str(sample_log_path))) 
         
         assert len(logs) == 7 #колво элементов
         
