@@ -48,7 +48,7 @@ jobs:
       - name: Установка зависимостей
         run:  
           poetry install --no-interaction --no-ansi 
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != "true" #только если кеш не нашелся
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != true #только если кеш не нашелся
       
       - name: Run Ruff linter
         run: ruff check src/ tests/
