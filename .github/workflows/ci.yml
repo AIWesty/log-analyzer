@@ -1,6 +1,7 @@
 name: CI Pipline
 
 on:
+  workflow_dispatch:
   push:
     branches: 
     - main #сработает при пуше в main и develop ветки
