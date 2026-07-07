@@ -51,7 +51,7 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != true #только если кеш не нашелся
       
       - name: Run Ruff linter
-        run: ruff check src/ tests/
+        run: poetry run ruff check src/ tests/
       
       - name: Check code formatting with Black
-        run: black --check src/ tests/
+        run: poetry run black --check src/ tests/
