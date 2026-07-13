@@ -1,7 +1,6 @@
 name: CI Pipline
 
 on:
-  workflow_dispatch:
   push:
     branches: 
     - main #сработает при пуше в main и develop ветки
@@ -10,6 +9,7 @@ on:
   pull_request: 
     branches: 
     - main #при пулл реквесте в мейн  
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.14"
