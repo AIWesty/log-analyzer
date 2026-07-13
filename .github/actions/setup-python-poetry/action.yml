@@ -1,0 +1,37 @@
+name: "Setup Python & Poetry with Cache"
+description: Установка python нужной версии и poetry, восстановление кеша из .venv
+
+inputs: 
+  python-version:
+    description: "Версия python для установки"
+    required: true #необходим для передачи
+
+runs: 
+  using: 'composite' # Указывает, что это составной экшн
+  steps:
+  - name: Set up Python ${{ inputs.python-version }} 
+    uses: actions/setup-python@v6
+    with:
+      python-version: ${{ inputs.python-version }} #ставим версию которую передали
+
+  - name: Install Poetry
+    uses: snok/install-poetry@v1
+    with:
+      virtualenvs-create: true
+      virtualenvs-in-project: true
+      installer-parallel: true
+
+  - name: Load cached venv
+    uses: actions/cache@v6
+    with:
+      path: .venv #файл который мы кешируем - все окружение с зависимостями
+      # Уникальный ключ кэша зависит от ОС, версии Python и файла poetry.lock
+      key: venv-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #если lock файл изменился, загрузится старый и докачается разница
+      restore-keys: |
+        venv-${{ runner.os }}-py${{ inputs.python-version }}-
+
+  - name: Install dependencies
+    shell: bash # в составных экшенах обязательно указывать оболочку для выполнения таких команд
+    run: poetry install --no-interaction --no-ansi
+

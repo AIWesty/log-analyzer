@@ -24,31 +24,10 @@ jobs:
       - name: Checkout code 
         uses: actions/checkout@v7 #готовый переиспользуемый модуль, клонирует репозиторий в job 
       
-      - name: Сетап python
-        uses: actions/setup-python@v6 # модуль установки python 
-        with:
-          python-version: ${{ env.PYTHON_VERSION }} # передаем переменные для настройки
-          
-          
-      - name: Установка poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true # не создаем виртуальное окружение, тк джоба это отдельный изолированный контейнер
-          virtualenvs-in-project: true
-          installer-parallel: true
-
-      - name: Загрузка кеша venv
-        id: cached-poetry-dependencies # присваиваем "название" чтобы обратиться позже 
-        uses: actions/cache@v6
-        with:
-          path: .venv #файл который мы кешируем - все окружение с зависимостями
-          # Уникальный ключ кэша зависит от ОС, версии Python и файла poetry.lock
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-        
-      - name: Установка зависимостей
-        run:  
-          poetry install --no-interaction --no-ansi 
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != true #только если кеш не нашелся
+      - name: Установка python + poetry и кеширование зависимостей .venv
+        uses: ./.github/actions/setup-python-poetry
+        with: 
+          python-version: 3.14
       
       - name: Run Ruff linter
         run: poetry run ruff check src/ tests/
@@ -70,34 +49,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       
-      - name: Сетап python
-        uses: actions/setup-python@v6 # модуль установки python 
-        with:
-          python-version: ${{ matrix.python-version }} # передаем переменные для настройки
+      - name:  Установка python + poetry и кеширование зависимостей .venv
+        uses: ./.github/actions/setup-python-poetry
+        with: 
+          python-version: ${{ matrix.python_version }}
 
-      - name: Установка poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true # не создаем виртуальное окружение, тк джоба это отдельный изолированный контейнер
-          virtualenvs-in-project: true
-          installer-parallel: true
-
-      - name: Загрузка кеша venv
-        id: cached-poetry-dependencies # присваиваем "название" чтобы обратиться позже 
-        uses: actions/cache@v6
-        with:
-          path: .venv #файл который мы кешируем - все окружение с зависимостями
-          # Уникальный ключ кэша зависит от ОС, версии Python и файла poetry.lock
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-        
-      - name: Установка зависимостей
-        run:  
-          poetry install --no-interaction --no-ansi 
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != true #только если кеш не нашелся
       
       - name: Запуск тестов
         run: | # запускаем тесты с отчетом по покрытию кода
-          poetry run pytest --cov=src -cov-report=xml --cov-report=term-missing 
+          poetry run pytest --cov=src --cov-report=xml --cov-report=term-missing 
         
       - name: Загрузка отчета покрытия тестами
         if: matrix.python-version == '3.14'

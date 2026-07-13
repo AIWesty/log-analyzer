@@ -6,7 +6,7 @@ authors = [
     {name = "AIWesty",email = "dmitriistrekalin@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
