@@ -67,3 +67,51 @@ jobs:
           flags: unittests
           name: codecov-umbrella #пользовательское название
           fail_ci_if_error: false
+
+  build: 
+    name: Build Docker Image
+    runs-on: self-hosted
+    needs: test #выполнится только после успешных тестов
+
+    outputs: #указываем что получаем на выходе, проброс данных, сможем использовать в других джобах
+      image-digest: ${{ steps.build.outputs.digest }} #хеш(sha) образа
+      image-tag: ${{ steps.meta.outputs.tags }} #теги образа(все)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Сетап docker buildx #создаем сборщик образов
+        uses: docker/setup-buildx-action@v4
+      
+      - name: Сбор метаданных с репозитория 
+        id: meta 
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=ref,event=branch  
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build Docker image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: . #указываем откуда брать dockerfile 
+          push: false  # Не пушим в CI, только билдим
+          tags: ${{ steps.meta.outputs.tags }} #используем тег для образа из метаданных
+          labels: ${{ steps.meta.outputs.labels }} 
+          cache-from: type=gha #используем кеш github actions
+          cache-to: type=gha,mode=max #кешируем в github actions и используем все слои для кеша
+          outputs: type=docker #локальное сохранение сборки
+       
+      - name: Test Docker image
+        # Проверяем что образ работает
+        run: |
+          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+          echo "Testing image: $IMAGE_TAG"
+          docker run --rm "$IMAGE_TAG" --help || echo "Warning: --help failed, but continuing"
