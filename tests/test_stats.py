@@ -38,7 +38,7 @@ class TestLogStatistics:
         """тестируем распределение по статусам"""
 
         stats = LogStatistics(sample_logs)
-        status_distr = stats.get_status_distribution() 
+        status_distr = stats.get_status_distribution()
 
         assert status_distr[200] == 4
         assert status_distr[404] == 1

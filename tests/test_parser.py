@@ -68,5 +68,5 @@ class TestNginxLogParser:
         log_file.write_text("\n\n\n")
 
         logs = list(self.parser.parse_file_generator(log_file))
-        
+
         assert logs == []
