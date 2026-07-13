@@ -430,5 +430,5 @@ dev = ["black", "pytest", "pytest-cov", "ruff", "tqdm"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.14"
-content-hash = "3ae3508b98c3ec5d3c11664dcd75565e99a00827ade26c9451e7586ce1cc1d4a"
+python-versions = ">=3.12"
+content-hash = "715082f14ddd345a38151d32175ff860123973b6df1ef9969bdc1314e0574acd"
