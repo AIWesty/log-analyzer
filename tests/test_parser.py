@@ -67,5 +67,6 @@ class TestNginxLogParser:
         log_file = tmp_path / "empty.log"
         log_file.write_text("\n\n\n")
 
-        logs = self.parser.parse_file_generator(log_file)
-        assert logs is None
+        logs = list(self.parser.parse_file_generator(log_file))
+        
+        assert logs == []
