@@ -54,7 +54,7 @@ jobs:
       - name:  Установка python + poetry и кеширование зависимостей .venv
         uses: ./.github/actions/setup-python-poetry
         with: 
-          python-version: ${{ matrix.python_version }}
+          python-version: ${{ matrix.python-version }}
 
       
       - name: Запуск тестов
