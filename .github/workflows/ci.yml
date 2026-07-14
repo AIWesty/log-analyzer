@@ -155,7 +155,7 @@ jobs:
           context: . 
           push: true
           # тег образа указываем из прошлой джобы через needs, там мы собирали метаинформацию
-          tags: ${{ needs.build.meta.outputs.image-tag }} 
-          labels: ${{ needs.build.meta.outputs.labels }}
+          tags: ${{ needs.build.outputs.image-tag }} 
+          labels: ${{ needs.build.outputs.labels }}
           cache-from: ${{ env.CACHE_FROM }}
           cache-to: ${{ env.CACHE_TO }}
