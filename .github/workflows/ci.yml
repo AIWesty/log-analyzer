@@ -125,7 +125,10 @@ jobs:
     runs-on: self-hosted
     needs: build
 
-    if: github.event_name == "push" && github.ref == "refs/heads/main" #джоба сработает при пуше в мейн 
+    #джоба сработает при пуше в мейн или develop ветку
+    if: >
+      github.event_name == 'push' && 
+      (github.ref_name == 'main' || github.ref_name == 'develop' || startsWith(github.ref_name, 'develop/'))  
  
     permissions: 
       contents: read #позволяет читать из репозитория 
