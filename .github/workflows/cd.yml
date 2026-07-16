@@ -28,12 +28,13 @@ jobs:
     name: Build Ansible Runner Image
     runs-on: self-hosted
 
-    #выполняем job только есть ci завершился успешно или в ручном запуске
+    #выполняем job если ci завершился успешно или при ручном запуске
     if: >
-      github.event.workflow_run.conclusion == 'success' && 
-      (github.event.workflow_run.head_branch == 'main' || 
-      github.event.workflow_run.head_branch == 'develop' || 
-      startsWith(github.event.workflow_run.head_branch, 'develop/'))
+      (github.event.workflow_run.conclusion == 'success' && 
+       (github.event.workflow_run.head_branch == 'main' || 
+        github.event.workflow_run.head_branch == 'develop' || 
+        startsWith(github.event.workflow_run.head_branch, 'develop/'))) ||
+      github.event_name == 'workflow_dispatch'
 
     permissions:
       contents: read
@@ -122,7 +123,7 @@ jobs:
             -e SSH_PRIVATE_KEY \
             -e SSH_USER \
             -e SSH_HOST \
-            ${{ env.CONTAINER_IMAGE }} \
+            ${{ env.RUNNER_IMAGE }} \
             bash -c '
               mkdir -p /root/.ssh && chmod 700 /root/.ssh
               echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
@@ -144,7 +145,7 @@ jobs:
             -e SSH_USER \
             -e SSH_HOST \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
-            ${{ env.CONTAINER_IMAGE }} \
+            ${{ env.RUNNER_IMAGE }} \
             bash -c '
               mkdir -p /root/.ssh && chmod 700 /root/.ssh
               echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
@@ -167,7 +168,7 @@ jobs:
             -e SSH_USER \
             -e SSH_HOST \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
-            ${{ env.CONTAINER_IMAGE }} \
+            ${{ env.RUNNER_IMAGE }} \
             bash -c '
               mkdir -p /root/.ssh && chmod 700 /root/.ssh
               echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
