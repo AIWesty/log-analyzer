@@ -1,13 +1,13 @@
 FROM python:3.14-slim AS builder
 
-RUN pip install --no-cache-dir poetry 
+RUN pip install --no-cache-dir poetry
 
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
 
-#создаем окружение
-RUN poetry config virtualenvs.in-project true 
+#создаем окружение внутри .venv
+ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 
 #ставим зависимости
 RUN poetry install --only main --no-interaction --no-ansi --no-root

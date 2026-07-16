@@ -21,7 +21,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  ANSIBLE_IMAGE_NAME: ${{ lower(github.repository) }}/ansible-runner #указываем путь до раннера
+  
 
 jobs:
   build-runner:
@@ -47,6 +47,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # Принудительно приводим имя репозитория к нижнему регистру через bash
+      - name: Set lowercase repository name
+        id: repo_name
+        run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Setup docker buildx
         uses: docker/setup-buildx-action@v4
 
@@ -61,7 +66,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.REGISTRY }}/${{ env.ANSIBLE_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/ansible-runner #используем уже с lowercase
           tags: |
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
@@ -82,7 +87,7 @@ jobs:
         id: container-tag
         # перенаправляем тег с sha(текущим комитом) в вывод outputs
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.ANSIBLE_IMAGE_NAME }}@${{ steps.build-push.outputs.digest }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/ansible-runner@${{ steps.build-push.outputs.digest }}"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT" 
 
   deploy:
@@ -109,6 +114,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+        #приводим к нижнему регистру
+      - name: Set lowercase repository name
+        run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GIT
+
       - name: Setup SSH key
         shell: bash
         # вытащим ключ из переменно
@@ -122,7 +131,7 @@ jobs:
         shell: bash
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_HOST }}@${{ secrets.SSH_USER }} \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
               "hostname && whoami && docker --version"
 
       - name: Prepare host (idempotent)
@@ -131,7 +140,7 @@ jobs:
           cd ansible
           ansible-playbook playbooks/prepare-host.yml \
             -i inventory.ini \
-            --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}"
+            --extra-vars "ansible_host=${{ secrets.SSH_USER }} ansible_user=${{ secrets.SSH_HOST }}"
         continue-on-error: true
 
       - name: Deploy application

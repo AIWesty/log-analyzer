@@ -3,7 +3,7 @@
 .gitignore
 .github
 
-
+# Python build artifacts
 __pycache__/
 *.pyc
 *.pyo
@@ -15,23 +15,39 @@ __pycache__/
 dist/
 build/
 
-
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 
-
+# Tests & coverage
 tests/
 htmlcov/
 .coverage
 *.cover
 .pytest_cache/
 
-
+# OS
 .DS_Store
 Thumbs.db
 
-
+# Docker
 docker-compose.override.yml
+compose.yml
+
+# Project dirs not needed in Docker build
+ansible/
+scripts/
+nginx/
+
+# Environment
+.env*
 .env.local
+
+# Build tooling
+Makefile
+
+# Local virtualenv (can be huge, slows build massively)
+.venv
+.venv/**
