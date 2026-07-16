@@ -38,9 +38,4 @@ runs:
     shell: bash # в составных экшенах обязательно указывать оболочку для выполнения таких команд
     run: poetry install --no-interaction --no-ansi
 
-  - name: Debug
-    shell: bash
-    run: |
-      poetry show black
-      poetry run black --version
 

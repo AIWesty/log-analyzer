@@ -26,11 +26,6 @@ logs:
 shell:
 	docker-compose exec nginx sh
 
-black:
-	poetry run black --check .
-
-blackfix:
-	poetry run black .
 
 ruff: 
 	poetry run ruff check src/ tests/
@@ -38,6 +33,9 @@ ruff:
 ruffix:
 	poetry run ruff check src/ tests/ --fix
 
+ruff-format:
+	poetry run ruff format .
+	
 prepare:
 	cd ansible && ansible-playbook playbooks/prepare-host.yml -i inventory.ini -v
 
