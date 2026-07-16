@@ -119,22 +119,30 @@ jobs:
         shell: bash
         run: |
           docker run --rm \
-            -e SSH_PRIVATE_KEY="${{ secrets.SSH_PRIVATE_KEY }}" \
+            -e SSH_PRIVATE_KEY \
+            -e SSH_USER \
+            -e SSH_HOST \
             ${{ env.CONTAINER_IMAGE }} \
             bash -c '
               mkdir -p /root/.ssh && chmod 700 /root/.ssh
               echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
               chmod 600 /root/.ssh/deploy_key
               ssh -i /root/.ssh/deploy_key -o StrictHostKeyChecking=no \
-                ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+                "${SSH_USER}@${SSH_HOST}" \
                 "hostname && whoami && docker --version"
             '
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
 
       - name: Prepare host (idempotent)
         shell: bash
         run: |
           docker run --rm \
-            -e SSH_PRIVATE_KEY="${{ secrets.SSH_PRIVATE_KEY }}" \
+            -e SSH_PRIVATE_KEY \
+            -e SSH_USER \
+            -e SSH_HOST \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
             ${{ env.CONTAINER_IMAGE }} \
             bash -c '
@@ -143,15 +151,21 @@ jobs:
               chmod 600 /root/.ssh/deploy_key
               ansible-playbook /workspace/ansible/playbooks/prepare-host.yml \
                 -i /workspace/ansible/inventory.ini \
-                --extra-vars "ansible_host=${{ secrets.SSH_USER }} ansible_user=${{ secrets.SSH_HOST }}"
+                --extra-vars "ansible_host=${SSH_USER} ansible_user=${SSH_HOST}"
             '
         continue-on-error: true
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
 
       - name: Deploy application
         shell: bash
         run: |
           docker run --rm \
-            -e SSH_PRIVATE_KEY="${{ secrets.SSH_PRIVATE_KEY }}" \
+            -e SSH_PRIVATE_KEY \
+            -e SSH_USER \
+            -e SSH_HOST \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
             ${{ env.CONTAINER_IMAGE }} \
             bash -c '
@@ -160,10 +174,14 @@ jobs:
               chmod 600 /root/.ssh/deploy_key
               ansible-playbook /workspace/ansible/playbooks/deploy.yml \
                 -i /workspace/ansible/inventory.ini \
-                --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
+                --extra-vars "ansible_host=${SSH_HOST} ansible_user=${SSH_USER}" \
                 --extra-vars "registry_user=${{ github.actor }}" \
                 --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
                 --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
                 --extra-vars "docker_tag=${{ github.sha }}" \
                 --extra-vars "github_repository=${{ github.repository }}"
             '
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
