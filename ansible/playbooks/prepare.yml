@@ -99,6 +99,12 @@
         - '80'
         - '443'
 
+    - name: Allow application port 8080
+      community.general.ufw:
+        rule: allow
+        port: '8080'
+        proto: tcp
+
 
     - name: Create application directories
       ansible.builtin.file:

@@ -12,6 +12,26 @@
     max_lines: 500000
 
   tasks:
+    - name: Allow SSH
+      community.general.ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Allow HTTP/HTTPS
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '80'
+        - '443'
+
+    - name: Allow application port 8080
+      community.general.ufw:
+        rule: allow
+        port: '8080'
+        proto: tcp
+
     - name: Create application directory
       ansible.builtin.file:
         path: "{{ app_dir }}"

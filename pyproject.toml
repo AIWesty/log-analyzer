@@ -11,8 +11,8 @@ dependencies = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.0.284",
-    "tqdm>=4.68.3,
-    "black>=26.5.1,
+    "tqdm>=4.68.3",
+    "black>=26.5.1",
 ]
 
 
@@ -22,7 +22,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "black>=23.7.0",
     "ruff>=0.0.284",
-    "tqdm (>=4.68.3,<5.0.0)"
+    "tqdm>=4.68.3,<5.0.0",
 ]
 
 [build-system]

@@ -2,8 +2,8 @@ name: CD Pipeline
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"] #запускаем после CI pipline 
-    types: completed
+    workflows: ["CI Pipeline"] #запускаем после CI pipline
+    types: completed  # когда он завершился
     branches:
     - main
     - develop
@@ -98,7 +98,7 @@ jobs:
     environment:
       name: ${{ github.event.inputs.environment || 'staging' }}
 
-    env:
+    env: # чтобы не падало из за known hosts
       ANSIBLE_HOST_KEY_CHECKING: "False"
 
     steps:
@@ -107,6 +107,7 @@ jobs:
 
       - name: Setup SSH key
         shell: bash
+        # вытащим ключ из переменно
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
