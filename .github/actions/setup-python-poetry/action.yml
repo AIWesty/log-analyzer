@@ -14,12 +14,7 @@ runs:
     with:
       python-version: ${{ inputs.python-version }} #ставим версию которую передали
   
-  - name: Show poetry packages
-    run: poetry show
 
-
-  - name: Show black
-    run: poetry show black
 
   - name: Install Poetry
     uses: snok/install-poetry@v1
@@ -28,8 +23,12 @@ runs:
       virtualenvs-in-project: true
       installer-parallel: true
 
+  - name: Show poetry packages
+    shell: bash
+    run: poetry show
       
   - name: Show black
+    shell: bash
     run: poetry show black
 
 
