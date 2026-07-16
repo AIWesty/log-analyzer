@@ -1,7 +1,7 @@
 # 📊 Log Analyzer
 
-[![CI Pipeline](https://github.com/YOUR_USERNAME/log-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/log-analyzer/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/YOUR_USERNAME/log-analyzer/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/log-analyzer)
+[![CI Pipeline](https://github.com/AIWesty/log-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/AIWesty/log-analyzer/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/AIWesty/log-analyzer/branch/main/graph/badge.svg)](https://codecov.io/gh/AIWesty/log-analyzer)
 [![Python 3.14](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
