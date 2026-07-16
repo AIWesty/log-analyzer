@@ -23,14 +23,6 @@ runs:
       virtualenvs-in-project: true
       installer-parallel: true
 
-  - name: Show poetry packages
-    shell: bash
-    run: poetry show
-      
-  - name: Show black
-    shell: bash
-    run: poetry show black
-
 
   - name: Load cached venv
     uses: actions/cache@v6
@@ -45,4 +37,10 @@ runs:
   - name: Install dependencies
     shell: bash # в составных экшенах обязательно указывать оболочку для выполнения таких команд
     run: poetry install --no-interaction --no-ansi
+
+  - name: Debug
+  shell: bash
+  run: |
+    poetry show black
+    poetry run black --version
 
