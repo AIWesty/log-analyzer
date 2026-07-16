@@ -39,8 +39,8 @@ runs:
     run: poetry install --no-interaction --no-ansi
 
   - name: Debug
-  shell: bash
-  run: |
-    poetry show black
-    poetry run black --version
+    shell: bash
+    run: |
+      poetry show black
+      poetry run black --version
 
