@@ -115,54 +115,55 @@ jobs:
       - name: Set lowercase repository name
         run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Setup SSH key
-        shell: bash
-        # вытащим ключ из переменно
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          echo "" >> ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
       - name: Test SSH connection
         shell: bash
         run: |
           docker run --rm \
-            -v ~/.ssh:/root/.ssh:ro \
+            -e SSH_PRIVATE_KEY="${{ secrets.SSH_PRIVATE_KEY }}" \
             ${{ env.CONTAINER_IMAGE }} \
-            ssh -i /root/.ssh/deploy_key -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "hostname && whoami && docker --version"
+            bash -c '
+              mkdir -p /root/.ssh && chmod 700 /root/.ssh
+              echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
+              chmod 600 /root/.ssh/deploy_key
+              ssh -i /root/.ssh/deploy_key -o StrictHostKeyChecking=no \
+                ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+                "hostname && whoami && docker --version"
+            '
 
       - name: Prepare host (idempotent)
         shell: bash
         run: |
           docker run --rm \
+            -e SSH_PRIVATE_KEY="${{ secrets.SSH_PRIVATE_KEY }}" \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
-            -v ~/.ssh:/root/.ssh:ro \
             ${{ env.CONTAINER_IMAGE }} \
-            ansible-playbook /workspace/ansible/playbooks/prepare-host.yml \
-              -i /workspace/ansible/inventory.ini \
-              --extra-vars "ansible_host=${{ secrets.SSH_USER }} ansible_user=${{ secrets.SSH_HOST }}"
+            bash -c '
+              mkdir -p /root/.ssh && chmod 700 /root/.ssh
+              echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
+              chmod 600 /root/.ssh/deploy_key
+              ansible-playbook /workspace/ansible/playbooks/prepare-host.yml \
+                -i /workspace/ansible/inventory.ini \
+                --extra-vars "ansible_host=${{ secrets.SSH_USER }} ansible_user=${{ secrets.SSH_HOST }}"
+            '
         continue-on-error: true
 
       - name: Deploy application
         shell: bash
         run: |
           docker run --rm \
+            -e SSH_PRIVATE_KEY="${{ secrets.SSH_PRIVATE_KEY }}" \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
-            -v ~/.ssh:/root/.ssh:ro \
             ${{ env.CONTAINER_IMAGE }} \
-            ansible-playbook /workspace/ansible/playbooks/deploy.yml \
-              -i /workspace/ansible/inventory.ini \
-              --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
-              --extra-vars "registry_user=${{ github.actor }}" \
-              --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
-              --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
-              --extra-vars "docker_tag=${{ github.sha }}" \
-              --extra-vars "github_repository=${{ github.repository }}"
-
-      - name: Cleanup secrets
-        if: always()
-        shell: bash
-        run: rm -f ~/.ssh/deploy_key
+            bash -c '
+              mkdir -p /root/.ssh && chmod 700 /root/.ssh
+              echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
+              chmod 600 /root/.ssh/deploy_key
+              ansible-playbook /workspace/ansible/playbooks/deploy.yml \
+                -i /workspace/ansible/inventory.ini \
+                --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
+                --extra-vars "registry_user=${{ github.actor }}" \
+                --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
+                --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
+                --extra-vars "docker_tag=${{ github.sha }}" \
+                --extra-vars "github_repository=${{ github.repository }}"
+            '
