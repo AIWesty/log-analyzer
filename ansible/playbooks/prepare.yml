@@ -9,7 +9,7 @@
       - docker-ce-cli
       - containerd.io
       - docker-compose-plugin
-    deploy_user: deployer
+    deploy_user: deploy
 
   tasks:
     - name: Update apt cache
