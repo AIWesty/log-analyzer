@@ -98,17 +98,14 @@ jobs:
     # запустит в случае если запуск вручную или при успешном worflow_run
     if: always() && (github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch')
 
-    container:
-      #образ вытащим из предыдущей джобы из otputs
-      image: ${{ needs.build-runner.outputs.container-image }} 
-      options: --user root
-    
     #передаем куда будем деплоить 
     environment:
       name: ${{ github.event.inputs.environment || 'staging' }}
 
     env: # чтобы не падало из за known hosts
       ANSIBLE_HOST_KEY_CHECKING: "False"
+      # образ из предыдущей джобы
+      CONTAINER_IMAGE: ${{ needs.build-runner.outputs.container-image }}
 
     steps:
       - name: Checkout code
@@ -116,7 +113,7 @@ jobs:
 
         #приводим к нижнему регистру
       - name: Set lowercase repository name
-        run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GIT
+        run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Setup SSH key
         shell: bash
@@ -130,31 +127,40 @@ jobs:
       - name: Test SSH connection
         shell: bash
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+          docker run --rm \
+            -v ~/.ssh:/root/.ssh:ro \
+            ${{ env.CONTAINER_IMAGE }} \
+            ssh -i /root/.ssh/deploy_key -o StrictHostKeyChecking=no \
               ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
               "hostname && whoami && docker --version"
 
       - name: Prepare host (idempotent)
         shell: bash
         run: |
-          cd ansible
-          ansible-playbook playbooks/prepare-host.yml \
-            -i inventory.ini \
-            --extra-vars "ansible_host=${{ secrets.SSH_USER }} ansible_user=${{ secrets.SSH_HOST }}"
+          docker run --rm \
+            -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
+            -v ~/.ssh:/root/.ssh:ro \
+            ${{ env.CONTAINER_IMAGE }} \
+            ansible-playbook /workspace/ansible/playbooks/prepare-host.yml \
+              -i /workspace/ansible/inventory.ini \
+              --extra-vars "ansible_host=${{ secrets.SSH_USER }} ansible_user=${{ secrets.SSH_HOST }}"
         continue-on-error: true
 
       - name: Deploy application
         shell: bash
         run: |
-          cd ansible
-          ansible-playbook playbooks/deploy.yml \
-            -i inventory.ini \
-            --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
-            --extra-vars "registry_user=${{ github.actor }}" \
-            --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
-            --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
-            --extra-vars "docker_tag=${{ github.sha }}" \
-            --extra-vars "github_repository=${{ github.repository }}"
+          docker run --rm \
+            -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
+            -v ~/.ssh:/root/.ssh:ro \
+            ${{ env.CONTAINER_IMAGE }} \
+            ansible-playbook /workspace/ansible/playbooks/deploy.yml \
+              -i /workspace/ansible/inventory.ini \
+              --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
+              --extra-vars "registry_user=${{ github.actor }}" \
+              --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
+              --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
+              --extra-vars "docker_tag=${{ github.sha }}" \
+              --extra-vars "github_repository=${{ github.repository }}"
 
       - name: Cleanup secrets
         if: always()
