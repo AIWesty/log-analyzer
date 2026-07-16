@@ -3,25 +3,21 @@ name = "log-analyzer"
 version = "0.1.0"
 description = "Nginx log analyzer"
 authors = [
-    {name = "AIWesty",email = "dmitriistrekalin@gmail.com"}
+    { name = "AIWesty", email = "dmitriistrekalin@gmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.12"
+
 dependencies = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.0.284",
-    "tqdm>=4.68.3",
-    "black (>=26.5.1,<27.0.0)",
+    "tqdm>=4.68.3,<5.0.0",
 ]
 
-
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
+    "black>=26.5.1,<27.0.0",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    "ruff>=0.0.284",
-    "tqdm>=4.68.3,<5.0.0",
+    "ruff>=0.15.21",
 ]
 
 [build-system]
@@ -35,7 +31,7 @@ addopts = "-v --cov=src --cov-report=html"
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ["py312"]
 
 [tool.ruff]
 line-length = 88
