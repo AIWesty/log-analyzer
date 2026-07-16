@@ -1,0 +1,89 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"] #запустится при выполнении workflow CI 
+    types: completed
+    branches: 
+    - main
+    - develop
+    - 'develop/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment' #  при ручном запуске требует ввода данных
+        required: true
+        default: 'staging'
+        type: choice #дает выбор что указать staging или production
+        options:
+          - staging
+          - production
+
+env: 
+  # образ ansible runner
+  ANSIBLE_IMAGE: ghcr.io/${{ github.repository }}/ansible-runner:latest
+
+jobs:
+  deploy:
+    name: Deploy via Ansible
+    runs-on: self-hosted
+    
+    # запусти дпелой при успещном выполнении CI  или ручном запуске
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' 
+    
+    container:
+      image: ${{ env.ANSIBLE_IMAGE }}
+      options: --user root
+    
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}  # по дефолту стейдж окружение 
+    
+    env:
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup SSH key  
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          echo "" >> ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Test SSH connection
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_HOST }}@${{ secrets.SSH_USER }} \
+              "hostname && whoami && docker --version"
+
+      - name: Prepare host (idempotent)
+        shell: bash
+        # запустим плейбук подготовки целевой ос 
+        run: |
+          cd ansible 
+          ansible-playbook playbooks/prepare-host.yml \
+            -i inventory.ini \
+            --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}"
+        continue-on-error: true
+
+      - name: Deploy application
+        shell: bash
+        run: |
+          cd ansible
+          ansible-playbook playbooks/deploy.yml \
+            -i inventory.ini \
+            --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
+            --extra-vars "registry_user=${{ github.actor }}" \
+            --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
+            --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
+            --extra-vars "docker_tag=${{ github.sha }}" \
+            --extra-vars "github_repository=${{ github.repository }}"
+
+      - name: Cleanup secrets
+        if: always()
+        shell: bash
+        run: rm -f ~/.ssh/deploy_key

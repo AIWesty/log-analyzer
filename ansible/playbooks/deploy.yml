@@ -1,0 +1,76 @@
+---
+- name: Deploy Log Analyzer Application
+  hosts: app
+  become: true
+
+  vars:
+    app_dir: /opt/log-analyzer
+    container_name: log-analyzer
+    docker_image: "ghcr.io/{{ github_repository }}/log-analyzer"
+    output_format: json
+    top_n_ips: 10
+    max_lines: 500000
+
+  tasks:
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Generate docker-compose.yml from template
+      ansible.builtin.template:
+        src: docker-compose.yml.j2 #собираем из шаблона образ
+        dest: "{{ app_dir }}/docker-compose.yml"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+      register: compose_file
+
+    - name: Login to GitHub Container Registry
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: "{{ registry_user }}"
+        password: "{{ registry_password }}"
+        reauthorize: yes
+      no_log: true
+
+    - name: Pull and start containers with docker-compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        state: present
+        pull: always
+        recreate: "{{ 'always' if compose_file.changed else 'auto' }}"
+      register: compose_result
+
+    - name: Wait for container to be healthy
+      ansible.builtin.wait_for:
+        timeout: 30
+      when: compose_result.changed
+
+    - name: Check container status
+      ansible.builtin.command: "docker compose -f {{ app_dir }}/docker-compose.yml ps"
+      register: container_status
+      changed_when: false
+
+    - name: Show container status
+      ansible.builtin.debug:
+        var: container_status.stdout_lines
+
+    - name: Health check
+      ansible.builtin.command: "docker exec {{ container_name }} python -c 'import sys; sys.exit(0)'"
+      register: health_check
+      retries: 5
+      delay: 5
+      until: health_check.rc == 0
+      changed_when: false
+
+    - name: Deployment successful
+      ansible.builtin.debug:
+        msg: |
+          Application deployed successfully!
+          Image: {{ docker_image }}:{{ docker_tag }}
+          Container: {{ container_name }}
+          Status: {{ health_check.rc == 0 | ternary('healthy', 'unhealthy') }}

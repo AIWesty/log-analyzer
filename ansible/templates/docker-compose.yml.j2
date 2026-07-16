@@ -1,0 +1,31 @@
+
+log-analyzer:
+  image: {{ docker_image }}:{{ docker_tag }}
+  container_name: {{ container_name }}
+  restart: unless-stopped
+  
+  environment:
+    - LOG_FILE_PATH=/var/log/nginx/access.log
+    - OUTPUT_FORMAT={{ output_format | default('json') }}
+    - TOP_N_IPS={{ top_n_ips | default(10) }}
+    - MAX_LINES={{ max_lines | default(500000) }}
+  
+  volumes:
+    - /var/log/nginx:/var/log/nginx:ro
+  
+  
+  deploy:
+    resources:
+      limits:
+        cpus: '0.5'
+        memory: 256M
+      reservations:
+        cpus: '0.25'
+        memory: 128M
+  
+  healthcheck:
+    test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 10s

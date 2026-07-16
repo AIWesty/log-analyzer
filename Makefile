@@ -37,3 +37,29 @@ ruff:
 
 ruffix:
 	poetry run ruff check src/ tests/ --fix
+
+prepare:
+	cd ansible && ansible-playbook playbooks/prepare-host.yml -i inventory.ini -v
+
+# Деплой приложения
+deploy:
+	cd ansible && ansible-playbook playbooks/deploy.yml \
+		-i inventory.ini \
+		--extra-vars "docker_tag=latest" \
+		--extra-vars "registry_user=token" \
+		--extra-vars "registry_password=$(shell cat ~/.github_token)" \
+		-v
+
+# Dry-run (показать что изменится без применения)
+deploy-dry:
+	cd ansible && ansible-playbook playbooks/deploy.yml \
+		-i inventory.ini \
+		--check --diff -v
+
+# Проверить SSH
+test-ssh:
+	ssh -i ~/.ssh/deploy_key deployer@192.168.1.100 "echo '✅ SSH works' && hostname && docker --version"
+
+# Ping all hosts
+check:
+	cd ansible && ansible all -i inventory.ini -m ping
