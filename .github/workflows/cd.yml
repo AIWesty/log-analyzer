@@ -21,7 +21,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  ANSIBLE_IMAGE_NAME: ${{ github.repository }}/ansible-runner #указываем путь до раннера
+  ANSIBLE_IMAGE_NAME: ${{ lower(github.repository) }}/ansible-runner #указываем путь до раннера
 
 jobs:
   build-runner:
