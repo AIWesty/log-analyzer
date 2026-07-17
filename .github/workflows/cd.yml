@@ -31,9 +31,9 @@ jobs:
     #выполняем job если ci завершился успешно или при ручном запуске
     if: >
       (github.event.workflow_run.conclusion == 'success' && 
-       (github.event.workflow_run.head_branch == 'main' || 
-        github.event.workflow_run.head_branch == 'develop' || 
-        startsWith(github.event.workflow_run.head_branch, 'develop/'))) ||
+      (github.event.workflow_run.head_branch == 'main' || 
+      github.event.workflow_run.head_branch == 'develop' || 
+      startsWith(github.event.workflow_run.head_branch, 'develop/'))) ||
       github.event_name == 'workflow_dispatch'
 
     permissions:
@@ -116,73 +116,50 @@ jobs:
       - name: Set lowercase repository name
         run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ${{ github.workspace }}/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ${{ github.workspace }}/.ssh/deploy_key
+          chmod 600 ${{ github.workspace }}/.ssh/deploy_key
+
       - name: Test SSH connection
-        shell: bash
         run: |
           docker run --rm \
-            -e SSH_PRIVATE_KEY \
-            -e SSH_USER \
-            -e SSH_HOST \
+            -v ${{ github.workspace }}/.ssh:/root/.ssh:ro \
             ${{ env.RUNNER_IMAGE }} \
-            bash -c '
-              mkdir -p /root/.ssh && chmod 700 /root/.ssh
-              echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
-              chmod 600 /root/.ssh/deploy_key
-              ssh -i /root/.ssh/deploy_key -o StrictHostKeyChecking=no \
-                "${SSH_USER}@${SSH_HOST}" \
-                "hostname && whoami && docker --version"
-            '
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+            ssh -i /root/.ssh/deploy_key -o StrictHostKeyChecking=no \
+              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+              "hostname && whoami && docker --version"
 
       - name: Prepare host (idempotent)
-        shell: bash
         run: |
           docker run --rm \
-            -e SSH_PRIVATE_KEY \
-            -e SSH_USER \
-            -e SSH_HOST \
+            -v ${{ github.workspace }}/.ssh:/root/.ssh:ro \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
+            -e ANSIBLE_HOST_KEY_CHECKING=False \
             ${{ env.RUNNER_IMAGE }} \
-            bash -c '
-              mkdir -p /root/.ssh && chmod 700 /root/.ssh
-              echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
-              chmod 600 /root/.ssh/deploy_key
-              ansible-playbook /workspace/ansible/playbooks/prepare-host.yml \
-                -i /workspace/ansible/inventory.ini \
-                --extra-vars "ansible_host=${SSH_USER} ansible_user=${SSH_HOST}"
-            '
+            ansible-playbook /workspace/ansible/playbooks/prepare-host.yml \
+              -i /workspace/ansible/inventory.ini \
+              --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}"
         continue-on-error: true
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
 
       - name: Deploy application
-        shell: bash
         run: |
           docker run --rm \
-            -e SSH_PRIVATE_KEY \
-            -e SSH_USER \
-            -e SSH_HOST \
+            -v ${{ github.workspace }}/.ssh:/root/.ssh:ro \
             -v ${{ github.workspace }}/ansible:/workspace/ansible:ro \
+            -e ANSIBLE_HOST_KEY_CHECKING=False \
             ${{ env.RUNNER_IMAGE }} \
-            bash -c '
-              mkdir -p /root/.ssh && chmod 700 /root/.ssh
-              echo "$SSH_PRIVATE_KEY" > /root/.ssh/deploy_key
-              chmod 600 /root/.ssh/deploy_key
-              ansible-playbook /workspace/ansible/playbooks/deploy.yml \
-                -i /workspace/ansible/inventory.ini \
-                --extra-vars "ansible_host=${SSH_HOST} ansible_user=${SSH_USER}" \
-                --extra-vars "registry_user=${{ github.actor }}" \
-                --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
-                --extra-vars "docker_image=ghcr.io/${{ github.repository }}/log-analyzer" \
-                --extra-vars "docker_tag=${{ github.sha }}" \
-                --extra-vars "github_repository=${{ github.repository }}"
-            '
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+            ansible-playbook /workspace/ansible/playbooks/deploy.yml \
+              -i /workspace/ansible/inventory.ini \
+              --extra-vars "ansible_host=${{ secrets.SSH_HOST }} ansible_user=${{ secrets.SSH_USER }}" \
+              --extra-vars "registry_user=${{ github.actor }}" \
+              --extra-vars "registry_password=${{ secrets.GITHUB_TOKEN }}" \
+              --extra-vars "docker_image=ghcr.io/${{ env.REPO_LOWER }}/log-analyzer" \
+              --extra-vars "docker_tag=${{ github.sha }}" \
+              --extra-vars "github_repository=${{ github.repository }}"
+
+
+      - name: Cleanup secrets
+        if: always()
+        run: rm -rf ${{ github.workspace }}/.ssh
