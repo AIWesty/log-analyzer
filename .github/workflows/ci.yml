@@ -43,6 +43,7 @@ jobs:
     needs: lint # запускаем после успешного lint
 
     strategy:
+      max-parallel: 1
       matrix:
         python-version: ['3.12', '3.13', '3.14']
       fail-fast: false #продолжит если одна упала
